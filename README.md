@@ -50,7 +50,7 @@ How the check works:
 ```bash
 npm ci                              # install dependencies
 cp .env.example .env                # create local environment config
-npx playwright install chromium     # install the browser
+npx playwright install --no-shell chromium   # install the browser
 ```
 
 ## Running tests
@@ -85,6 +85,8 @@ Test inputs live in `test-data/*.json` and are imported with full type inference
 ## CI/CD
 
 GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report as a build artifact. On CI, failed tests are retried up to 2 times with a trace recorded.
+
+> **Note:** Tests run Chromium in Playwright's [new headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode) (`channel: 'chromium'`). Playwright's default headless shell announces itself as `HeadlessChrome`, and Hacker News answers that with HTTP 503 when the request comes from a cloud CI runner.
 
 **One-time setup:** in the repo, go to *Settings → Secrets and variables → Actions → Variables* and add `BASE_URL` = `https://news.ycombinator.com`.
 

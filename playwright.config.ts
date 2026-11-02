@@ -18,7 +18,9 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // New headless mode: the default headless shell announces itself as "HeadlessChrome",
+      // which Hacker News rejects (HTTP 503) when requests come from cloud CI runners.
+      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
   ],
 });
