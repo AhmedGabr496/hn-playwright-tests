@@ -37,7 +37,9 @@ export abstract class BasePage {
         const reason = rateLimited ? `rate limited after ${attempt} retries` : 'unexpected response';
         throw new Error(`Failed to load ${url}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
       }
-      await this.page.waitForTimeout(this.rateLimitBackoffMs * 2 ** attempt);
+      const backoffMs = this.rateLimitBackoffMs * 2 ** attempt;
+      console.warn(`Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${backoffMs / 1000}s`);
+      await this.page.waitForTimeout(backoffMs);
     }
   }
 
