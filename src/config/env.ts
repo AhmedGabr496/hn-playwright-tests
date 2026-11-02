@@ -16,19 +16,7 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function optionalNumberEnv(name: string, fallback: number): number {
-  const raw = process.env[name]?.trim();
-  if (!raw) return fallback;
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`Environment variable "${name}" must be a non-negative number, got "${raw}".`);
-  }
-  return value;
-}
-
 export const env = Object.freeze({
   baseUrl: requireEnv('BASE_URL'),
-  /** Minimum gap between page loads, to stay within the site's rate limits. */
-  navigationDelayMs: optionalNumberEnv('NAVIGATION_DELAY_MS', 0),
   isCI: Boolean(process.env.CI),
 });

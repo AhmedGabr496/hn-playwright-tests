@@ -1,5 +1,4 @@
 import type { Locator, Page } from '@playwright/test';
-import { env } from '@config/env';
 
 /** Common behaviour for every page object. */
 export abstract class BasePage {
@@ -8,14 +7,12 @@ export abstract class BasePage {
 
   /**
    * Hacker News throttles clients per IP with an HTTP 503 "not able to serve your requests this quickly" page.
-   * Page loads are spaced by NAVIGATION_DELAY_MS, and if we are still throttled we back off (10s, 20s, 40s,
-   * but never less than NAVIGATION_DELAY_MS) instead of failing or hammering the site.
+   * Page loads are not delayed up front; only when we are throttled do we wait 10s and retry the same page.
    */
   protected readonly rateLimitRetries = 3;
-  protected readonly rateLimitBackoffMs = 10_000;
+  protected readonly rateLimitRetryDelayMs = 10_000;
 
   private readonly rateLimitNotice: Locator;
-  private lastNavigationAt = 0;
 
   constructor(protected readonly page: Page) {
     this.rateLimitNotice = page.getByText('not able to serve your requests this quickly');
@@ -25,10 +22,9 @@ export abstract class BasePage {
     await this.navigateTo(this.path);
   }
 
-  /** Navigates to `url` (absolute or relative to BASE_URL), backing off and retrying while rate limited. */
+  /** Navigates to `url` (absolute or relative to BASE_URL), waiting and retrying while rate limited. */
   protected async navigateTo(url: string): Promise<void> {
     for (let attempt = 0; ; attempt++) {
-      await this.respectNavigationDelay();
       const response = await this.page.goto(url);
       if (response?.ok()) return;
 
@@ -37,22 +33,10 @@ export abstract class BasePage {
         const reason = rateLimited ? `rate limited after ${attempt} retries` : 'unexpected response';
         throw new Error(`Failed to load ${url}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
       }
-      // The retry is also a page load, so it waits at least until the navigation delay has passed.
-      const waitMs = Math.max(this.rateLimitBackoffMs * 2 ** attempt, this.msUntilNextNavigation());
-      console.warn(`Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${Math.ceil(waitMs / 1000)}s`);
-      await this.page.waitForTimeout(waitMs);
+      console.warn(
+        `Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${this.rateLimitRetryDelayMs / 1000}s`,
+      );
+      await this.page.waitForTimeout(this.rateLimitRetryDelayMs);
     }
-  }
-
-  private msUntilNextNavigation(): number {
-    return Math.max(0, this.lastNavigationAt + env.navigationDelayMs - Date.now());
-  }
-
-  private async respectNavigationDelay(): Promise<void> {
-    const waitMs = this.msUntilNextNavigation();
-    if (waitMs > 0) {
-      await this.page.waitForTimeout(waitMs);
-    }
-    this.lastNavigationAt = Date.now();
   }
 }
