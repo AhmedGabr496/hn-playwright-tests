@@ -1,0 +1,14 @@
+node_modules/
+
+# Playwright artifacts
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Local environment (never commit secrets) — see .env.example
+.env
+.env.*
+!.env.example
+
+.DS_Store
