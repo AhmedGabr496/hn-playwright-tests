@@ -3,8 +3,8 @@ import { env } from './src/config/env';
 
 export default defineConfig({
   testDir: './tests',
-  // Leaves room for backing off when Hacker News rate limits (see BasePage.navigateTo).
-  timeout: 180_000,
+  // Leaves room for paced page loads and rate-limit backoff (see BasePage.navigateTo).
+  timeout: 300_000,
   fullyParallel: true,
   forbidOnly: env.isCI,
   retries: env.isCI ? 1 : 0,

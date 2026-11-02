@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { env } from '@config/env';
 
 /** Common behaviour for every page object. */
 export abstract class BasePage {
@@ -6,13 +7,15 @@ export abstract class BasePage {
   protected abstract readonly path: string;
 
   /**
-   * Hacker News throttles clients per IP with an HTTP 503 "not able to serve your requests this quickly"
-   * page. Shared CI runner IPs hit this often, so we back off (10s, 20s, 40s) instead of failing or hammering the site.
+   * Hacker News throttles clients per IP with an HTTP 503 "not able to serve your requests this quickly" page.
+   * Page loads are spaced by NAVIGATION_DELAY_MS, and if we are still throttled we back off (10s, 20s, 40s)
+   * instead of failing or hammering the site.
    */
   protected readonly rateLimitRetries = 3;
   protected readonly rateLimitBackoffMs = 10_000;
 
   private readonly rateLimitNotice: Locator;
+  private lastNavigationAt = 0;
 
   constructor(protected readonly page: Page) {
     this.rateLimitNotice = page.getByText('not able to serve your requests this quickly');
@@ -25,6 +28,7 @@ export abstract class BasePage {
   /** Navigates to `url` (absolute or relative to BASE_URL), backing off and retrying while rate limited. */
   protected async navigateTo(url: string): Promise<void> {
     for (let attempt = 0; ; attempt++) {
+      await this.respectNavigationDelay();
       const response = await this.page.goto(url);
       if (response?.ok()) return;
 
@@ -35,5 +39,13 @@ export abstract class BasePage {
       }
       await this.page.waitForTimeout(this.rateLimitBackoffMs * 2 ** attempt);
     }
+  }
+
+  private async respectNavigationDelay(): Promise<void> {
+    const waitMs = this.lastNavigationAt + env.navigationDelayMs - Date.now();
+    if (waitMs > 0) {
+      await this.page.waitForTimeout(waitMs);
+    }
+    this.lastNavigationAt = Date.now();
   }
 }

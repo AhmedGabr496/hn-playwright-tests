@@ -17,6 +17,8 @@ jobs:
     env:
       # Configure under: Settings → Secrets and variables → Actions → Variables
       BASE_URL: ${{ vars.BASE_URL }}
+      # Shared runner IPs are often throttled by Hacker News; honour its robots.txt "Crawl-delay: 30".
+      NAVIGATION_DELAY_MS: 30000
 
     steps:
       - name: Checkout

@@ -15,7 +15,7 @@ How the check works:
 - Each article's exact publish time is read from the `title` attribute of its age element (e.g. `2026-11-02T14:40:05`, UTC), not from the relative "5 minutes ago" text.
 - Articles are de-duplicated by id, because new submissions shift the list while the test pages through it.
 - Equal timestamps are allowed (Hacker News uses one-second resolution).
-- Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. When that happens, the page objects wait 10s, then 20s, then 40s before retrying the same page, instead of failing or hammering the site.
+- Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. Page loads are spaced by `NAVIGATION_DELAY_MS` (CI uses 30s, per HN's `robots.txt` crawl delay). If a page is still throttled, the page objects wait 10s, then 20s, then 40s before retrying it, instead of failing or hammering the site.
 - On failure, the report lists every out-of-order pair, and the collected articles are attached to the HTML report as `articles.json`.
 
 ## Project structure
@@ -70,6 +70,7 @@ npm run typecheck      # TypeScript type check
 | Variable | Required | Description |
 | --- | --- | --- |
 | `BASE_URL` | Yes | Base URL of the application under test, e.g. `https://news.ycombinator.com` |
+| `NAVIGATION_DELAY_MS` | No | Minimum milliseconds between page loads (default `0`). CI sets `30000` to honour HN's crawl delay. |
 
 - **Locally,** values are read from `.env`, which is git-ignored and must never be committed.
 - **In CI,** values come from GitHub repository **Variables**. Sensitive values (credentials, tokens) belong in **Secrets**.
