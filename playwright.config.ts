@@ -15,7 +15,9 @@ export default defineConfig({
   use: {
     baseURL: env.baseUrl,
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    // Attach a full-page screenshot and a video of every test to the HTML report, locally and on CI.
+    screenshot: { mode: 'on', fullPage: true },
+    video: 'on',
   },
   projects: [
     {

@@ -17,6 +17,7 @@ How the check works:
 - Equal timestamps are allowed (Hacker News uses one-second resolution).
 - Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. Page loads are spaced by `NAVIGATION_DELAY_MS` (CI uses 30s, per HN's `robots.txt` crawl delay). If a page is still throttled, the page objects wait 10s, then 20s, then 40s before retrying it, instead of failing or hammering the site.
 - On failure, the report lists every out-of-order pair, and the collected articles are attached to the HTML report as `articles.json`.
+- Every run, local or CI, attaches a full-page screenshot and a video recording of each test to the HTML report (`npm run report`).
 
 ## Project structure
 
@@ -86,7 +87,7 @@ Test inputs live in `test-data/*.json` and are imported with full type inference
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report as a build artifact. On CI, a failed test is retried once with a trace recorded.
+GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report, including the screenshots and videos, as a build artifact. On CI, a failed test is retried once with a trace recorded.
 
 **One-time setup:** in the repo, go to *Settings → Secrets and variables → Actions → Variables* and add `BASE_URL` = `https://news.ycombinator.com`.
 
