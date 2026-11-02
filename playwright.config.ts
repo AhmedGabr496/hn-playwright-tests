@@ -4,7 +4,7 @@ import { env } from './src/config/env';
 export default defineConfig({
   testDir: './tests',
   // Leaves room for waiting out Hacker News rate limits (see BasePage.navigateTo).
-  timeout: 300_000,
+  timeout: 180_000,
   fullyParallel: true,
   forbidOnly: env.isCI,
   retries: env.isCI ? 1 : 0,

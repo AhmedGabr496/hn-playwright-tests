@@ -8,9 +8,9 @@ export abstract class BasePage {
   /**
    * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
    * requests this quickly" page. Page loads are not delayed up front; only when we are throttled do we wait 10s
-   * and retry the same page. Shared CI runner IPs can stay throttled for a minute or more, hence up to 9 retries.
+   * and retry the same page.
    */
-  protected readonly rateLimitRetries = 9;
+  protected readonly rateLimitRetries = 3;
   protected readonly rateLimitRetryDelayMs = 10_000;
 
   private readonly rateLimitNotice: Locator;
