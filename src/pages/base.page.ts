@@ -6,8 +6,9 @@ export abstract class BasePage {
   protected abstract readonly path: string;
 
   /**
-   * Hacker News throttles clients per IP with an HTTP 503 "not able to serve your requests this quickly" page.
-   * Page loads are not delayed up front; only when we are throttled do we wait 10s and retry the same page.
+   * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
+   * requests this quickly" page. Page loads are not delayed up front; only when we are throttled do we wait 10s
+   * and retry the same page.
    */
   protected readonly rateLimitRetries = 3;
   protected readonly rateLimitRetryDelayMs = 10_000;
@@ -28,7 +29,7 @@ export abstract class BasePage {
       const response = await this.page.goto(url);
       if (response?.ok()) return;
 
-      const rateLimited = await this.rateLimitNotice.isVisible();
+      const rateLimited = response?.status() === 429 || (await this.rateLimitNotice.isVisible());
       if (!rateLimited || attempt === this.rateLimitRetries) {
         const reason = rateLimited ? `rate limited after ${attempt} retries` : 'unexpected response';
         throw new Error(`Failed to load ${url}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
