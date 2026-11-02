@@ -8,8 +8,8 @@ export abstract class BasePage {
 
   /**
    * Hacker News throttles clients per IP with an HTTP 503 "not able to serve your requests this quickly" page.
-   * Page loads are spaced by NAVIGATION_DELAY_MS, and if we are still throttled we back off (10s, 20s, 40s)
-   * instead of failing or hammering the site.
+   * Page loads are spaced by NAVIGATION_DELAY_MS, and if we are still throttled we back off (10s, 20s, 40s,
+   * but never less than NAVIGATION_DELAY_MS) instead of failing or hammering the site.
    */
   protected readonly rateLimitRetries = 3;
   protected readonly rateLimitBackoffMs = 10_000;
@@ -37,14 +37,19 @@ export abstract class BasePage {
         const reason = rateLimited ? `rate limited after ${attempt} retries` : 'unexpected response';
         throw new Error(`Failed to load ${url}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
       }
-      const backoffMs = this.rateLimitBackoffMs * 2 ** attempt;
-      console.warn(`Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${backoffMs / 1000}s`);
-      await this.page.waitForTimeout(backoffMs);
+      // The retry is also a page load, so it waits at least until the navigation delay has passed.
+      const waitMs = Math.max(this.rateLimitBackoffMs * 2 ** attempt, this.msUntilNextNavigation());
+      console.warn(`Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${Math.ceil(waitMs / 1000)}s`);
+      await this.page.waitForTimeout(waitMs);
     }
   }
 
+  private msUntilNextNavigation(): number {
+    return Math.max(0, this.lastNavigationAt + env.navigationDelayMs - Date.now());
+  }
+
   private async respectNavigationDelay(): Promise<void> {
-    const waitMs = this.lastNavigationAt + env.navigationDelayMs - Date.now();
+    const waitMs = this.msUntilNextNavigation();
     if (waitMs > 0) {
       await this.page.waitForTimeout(waitMs);
     }

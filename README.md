@@ -15,7 +15,8 @@ How the check works:
 - Each article's exact publish time is read from the `title` attribute of its age element (e.g. `2026-11-02T14:40:05`, UTC), not from the relative "5 minutes ago" text.
 - Articles are de-duplicated by id, because new submissions shift the list while the test pages through it.
 - Equal timestamps are allowed (Hacker News uses one-second resolution).
-- Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. Page loads are spaced by `NAVIGATION_DELAY_MS` (CI uses 30s, per HN's `robots.txt` crawl delay). If a page is still throttled, the page objects wait 10s, then 20s, then 40s before retrying it, instead of failing or hammering the site.
+- Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. Page loads are spaced by `NAVIGATION_DELAY_MS` (CI uses 30s, per HN's `robots.txt` crawl delay). If a page is still throttled, the page objects wait 10s, then 20s, then 40s before retrying it (never less than `NAVIGATION_DELAY_MS`), instead of failing or hammering the site.
+- To make fewer requests, each static file (CSS, JS, images) is downloaded once per worker and then served from memory. Hacker News sends no cache headers, so otherwise every page load would cost 6 requests instead of 1.
 - On failure, the report lists every out-of-order pair, and the collected articles are attached to the HTML report as `articles.json`.
 - Every run, local or CI, attaches a full-page screenshot and a video recording of each test to the HTML report (`npm run report`).
 
@@ -30,8 +31,10 @@ How the check works:
 │   │   └── newest.page.ts              #   /newest page
 │   ├── components/                     # Reusable UI components shared across pages
 │   │   └── article-list.component.ts   #   ranked story list
-│   ├── fixtures/index.ts               # Injects page objects into tests
-│   └── utils/sort.utils.ts             # Sort-order validation helpers
+│   ├── fixtures/index.ts               # Injects page objects into tests, caches static files
+│   └── utils/
+│       ├── sort.utils.ts               #   sort-order validation helpers
+│       └── static-assets.utils.ts      #   serves static files from a per-worker cache
 ├── test-data/newest-page.json          # Test data (no values hard-coded in tests)
 ├── tests/                              # Test specs
 ├── .env.example                        # Template for required environment variables
