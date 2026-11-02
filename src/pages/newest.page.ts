@@ -14,11 +14,13 @@ export class NewestPage extends BasePage {
     this.moreLink = page.getByRole('link', { name: 'More', exact: true });
   }
 
+  /** Follows the "More" link's URL, so the response can be checked and rate limiting handled. */
   async goToNextPage(): Promise<void> {
-    const currentUrl = this.page.url();
-    await this.moreLink.click();
-    await this.page.waitForURL((url) => url.href !== currentUrl);
-    await this.assertNotRateLimited();
+    const nextPageUrl = await this.moreLink.getAttribute('href');
+    if (!nextPageUrl) {
+      throw new Error('The "More" link has no URL');
+    }
+    await this.navigateTo(nextPageUrl);
   }
 
   /**

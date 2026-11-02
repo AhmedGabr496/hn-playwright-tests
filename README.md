@@ -15,6 +15,7 @@ How the check works:
 - Each article's exact publish time is read from the `title` attribute of its age element (e.g. `2026-11-02T14:40:05`, UTC), not from the relative "5 minutes ago" text.
 - Articles are de-duplicated by id, because new submissions shift the list while the test pages through it.
 - Equal timestamps are allowed (Hacker News uses one-second resolution).
+- Hacker News rate-limits each IP. It returns HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. When that happens, the page objects wait 10s, then 20s, then 40s before retrying the same page, instead of failing or hammering the site.
 - On failure, the report lists every out-of-order pair, and the collected articles are attached to the HTML report as `articles.json`.
 
 ## Project structure
@@ -50,7 +51,7 @@ How the check works:
 ```bash
 npm ci                              # install dependencies
 cp .env.example .env                # create local environment config
-npx playwright install --no-shell chromium   # install the browser
+npx playwright install chromium     # install the browser
 ```
 
 ## Running tests
@@ -84,9 +85,7 @@ Test inputs live in `test-data/*.json` and are imported with full type inference
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report as a build artifact. On CI, failed tests are retried up to 2 times with a trace recorded.
-
-> **Note:** Tests run Chromium in Playwright's [new headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode) (`channel: 'chromium'`). Playwright's default headless shell announces itself as `HeadlessChrome`, and Hacker News answers that with HTTP 503 when the request comes from a cloud CI runner.
+GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report as a build artifact. On CI, a failed test is retried once with a trace recorded.
 
 **One-time setup:** in the repo, go to *Settings → Secrets and variables → Actions → Variables* and add `BASE_URL` = `https://news.ycombinator.com`.
 

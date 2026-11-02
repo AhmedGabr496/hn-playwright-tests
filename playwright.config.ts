@@ -3,9 +3,11 @@ import { env } from './src/config/env';
 
 export default defineConfig({
   testDir: './tests',
+  // Leaves room for backing off when Hacker News rate limits (see BasePage.navigateTo).
+  timeout: 180_000,
   fullyParallel: true,
   forbidOnly: env.isCI,
-  retries: env.isCI ? 2 : 0,
+  retries: env.isCI ? 1 : 0,
   workers: env.isCI ? 1 : undefined,
   reporter: env.isCI
     ? [['github'], ['list'], ['html', { open: 'never' }]]
@@ -18,9 +20,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // New headless mode: the default headless shell announces itself as "HeadlessChrome",
-      // which Hacker News rejects (HTTP 503) when requests come from cloud CI runners.
-      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 });
