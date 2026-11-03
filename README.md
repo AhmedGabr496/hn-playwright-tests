@@ -89,7 +89,7 @@ Test inputs live in `test-data/*.json` and are imported with full type inference
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report, including the screenshots and videos, as a build artifact. On CI, a failed test is retried once with a trace recorded.
+GitHub Actions (`.github/workflows/playwright.yml`) runs on **every push to `master`** and can also be started manually (*Actions → Playwright Tests → Run workflow*). The job runs on a macOS runner, because macOS runners connect from GitHub's own macOS cloud rather than the shared Azure address pool that Hacker News often throttles. The pipeline installs dependencies, type-checks, runs the tests in Chromium and uploads the HTML report, including the screenshots and videos, as a build artifact. On CI, a failed test is retried once with a trace recorded.
 
 **One-time setup:** in the repo, go to *Settings → Secrets and variables → Actions → Variables* and add `BASE_URL` = `https://news.ycombinator.com`.
 

@@ -12,7 +12,9 @@ concurrency:
 jobs:
   e2e:
     name: E2E tests
-    runs-on: ubuntu-latest
+    # macOS runners connect from GitHub's own macOS cloud, not the shared Azure address pool that Ubuntu and
+    # Windows runners use, which Hacker News often throttles.
+    runs-on: macos-latest
     timeout-minutes: 15
     env:
       # Configure under: Settings → Secrets and variables → Actions → Variables
