@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Locator, Page, Response } from '@playwright/test';
 
 /** Common behaviour for every page object. */
 export abstract class BasePage {
@@ -7,9 +7,10 @@ export abstract class BasePage {
 
   /**
    * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
-   * requests this quickly" page. Page loads are not delayed up front; only when we are throttled do we wait 10s
-   * and retry the same page.
+   * requests this quickly" page. We move between pages like a reader would (pause 5s, then click the link), and if
+   * we are still throttled we wait 10s and reload the page, up to 3 times.
    */
+  protected readonly pauseBetweenPagesMs = 5_000;
   protected readonly rateLimitRetries = 3;
   protected readonly rateLimitRetryDelayMs = 10_000;
 
@@ -25,17 +26,38 @@ export abstract class BasePage {
 
   /** Navigates to `url` (absolute or relative to BASE_URL), waiting and retrying while rate limited. */
   protected async navigateTo(url: string): Promise<void> {
+    await this.loadPage(() => this.page.goto(url));
+  }
+
+  /** Moves to another page like a reader would: pauses on the current page, then clicks `link`. */
+  protected async followLink(link: Locator): Promise<void> {
+    await this.page.waitForTimeout(this.pauseBetweenPagesMs);
+    await this.loadPage(async () => {
+      const navigation = this.page.waitForResponse(
+        (response) => response.request().isNavigationRequest() && response.frame() === this.page.mainFrame(),
+      );
+      await link.click();
+      const response = await navigation;
+      // The response arrives before the new page replaces the current one, so wait for that too.
+      await this.page.waitForURL((url) => url.href === response.url());
+      return response;
+    });
+  }
+
+  /** Runs `navigate` and checks the page it loads, waiting and reloading that page while rate limited. */
+  private async loadPage(navigate: () => Promise<Response | null>): Promise<void> {
     for (let attempt = 0; ; attempt++) {
-      const response = await this.page.goto(url);
+      const response = await (attempt === 0 ? navigate() : this.page.reload());
       if (response?.ok()) return;
 
       const rateLimited = response?.status() === 429 || (await this.rateLimitNotice.isVisible());
       if (!rateLimited || attempt === this.rateLimitRetries) {
         const reason = rateLimited ? `rate limited after ${attempt} retries` : 'unexpected response';
-        throw new Error(`Failed to load ${url}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
+        throw new Error(`Failed to load ${this.page.url()}: HTTP ${response?.status() ?? 'no response'} (${reason})`);
       }
       console.warn(
-        `Rate limited loading ${url} (HTTP ${response?.status()}); retrying in ${this.rateLimitRetryDelayMs / 1000}s`,
+        `Rate limited loading ${this.page.url()} (HTTP ${response?.status()}); ` +
+          `retrying in ${this.rateLimitRetryDelayMs / 1000}s`,
       );
       await this.page.waitForTimeout(this.rateLimitRetryDelayMs);
     }
