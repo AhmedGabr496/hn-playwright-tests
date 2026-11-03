@@ -7,10 +7,10 @@ export abstract class BasePage {
 
   /**
    * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
-   * requests this quickly" page. We move between pages like a reader would (pause 10s, then click the link), and
+   * requests this quickly" page. We move between pages like a reader would (pause 12s, then click the link), and
    * if we are still throttled we wait 10s and reload the page, up to 3 times.
    */
-  protected readonly pauseBetweenPagesMs = 10_000;
+  protected readonly pauseBetweenPagesMs = 12_000;
   protected readonly rateLimitRetries = 3;
   protected readonly rateLimitRetryDelayMs = 10_000;
 
