@@ -9,7 +9,6 @@ End-to-end tests for [Hacker News](https://news.ycombinator.com), written in **T
 | Test | Description |
 | --- | --- |
 | `tests/newest-sorting.spec.ts` | Opens [`/newest`](https://news.ycombinator.com/newest), pages through **More** to collect the first **100** articles and validates they are sorted from **newest to oldest**. |
-| `tests/sort-check.spec.ts` | Proves the sort check itself works: sorted lists pass, same-second articles pass, and an article followed by a newer one is reported. Runs in milliseconds, without a browser or network. |
 
 How the check works:
 
