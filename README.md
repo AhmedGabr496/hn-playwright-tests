@@ -46,8 +46,8 @@ Requires **Node.js 24** (see `.nvmrc`).
 
 ```bash
 npm ci                                       # install dependencies
-cp .env.example .env                         # create your local settings
 npx playwright install --no-shell chromium   # install the browser
+cp .env.example .env                         # optional: only if you want to change settings
 ```
 
 | Command | What it does |
@@ -77,36 +77,34 @@ Every run, locally or on CI, produces a Playwright HTML report:
 
 ## Configuration
 
-Settings come from environment variables, set locally in `.env` (git-ignored). On CI, `BASE_URL` comes from the repository's **Variables** (*Settings → Secrets and variables → Actions → Variables*) and the optional settings use their defaults.
+All settings and their default values are in [`.env.example`](.env.example). The test uses that file unless you create your own `.env` (git-ignored) to change them; CI uses `.env.example` as is. None of the settings is secret, so nothing needs to be set up in GitHub.
 
-| Variable | Required | Default | What it controls |
-| --- | --- | --- | --- |
-| `BASE_URL` | Yes | – | The site under test: `https://news.ycombinator.com` |
-| `PAGE_PAUSE_MS` | No | `10000` | Milliseconds spent scrolling each page before clicking **More** |
-| `RATE_LIMIT_RETRIES` | No | `3` | Reloads of a throttled page before the test fails |
-| `RATE_LIMIT_RETRY_DELAY_MS` | No | `10000` | Milliseconds to wait before each reload |
+| Setting | Default | What it controls |
+| --- | --- | --- |
+| `BASE_URL` | `https://news.ycombinator.com` | The site under test |
+| `PAGE_PAUSE_MS` | `10000` | Milliseconds spent scrolling each page before clicking **More** |
+| `RATE_LIMIT_RETRIES` | `3` | Reloads of a throttled page before the test fails |
+| `RATE_LIMIT_RETRY_DELAY_MS` | `10000` | Milliseconds to wait before each reload |
 
-A missing or invalid value stops the run straight away with a clear message.
+To change a value for one run, set it in your shell: `PAGE_PAUSE_MS=2000 npm test`. A missing setting stops the run straight away with a clear message.
 
 ## CI/CD
 
 The [GitHub Actions workflow](.github/workflows/playwright.yml) runs on every push to `master`, or by hand from *Actions → Playwright Tests → Run workflow*. It installs the dependencies, type-checks, installs Chromium, runs the test and uploads the report. A failed test is retried once, with a trace. The job only has read access to the repository.
-
-**One-time setup:** add the repository variable `BASE_URL` = `https://news.ycombinator.com`.
 
 ## Project structure
 
 ```text
 ├── .github/workflows/playwright.yml    # CI/CD pipeline
 ├── src/
-│   ├── config/env.ts                   # reads and checks the environment variables
 │   ├── pages/base.page.ts              # shared navigation: pacing, clicking links, rate-limit retries
 │   ├── pages/newest.page.ts            # the /newest page: collects articles through "More"
 │   ├── components/article-list.component.ts  # reads the article rows (the only code that knows the HTML)
 │   ├── fixtures/index.ts               # gives the test a ready page object, caches static files
 │   └── utils/                          # sort check and static-file cache
 ├── tests/newest-sorting.spec.ts        # the test
-└── playwright.config.ts                # timeouts, report, browser
+├── .env.example                        # all settings and their defaults
+└── playwright.config.ts                # loads the settings; timeouts, report, browser
 ```
 
 The test only lists the steps; page objects know how to use the site, and one component knows its HTML, so a markup change is fixed in one place. To add a page, extend `BasePage` in `src/pages/` and register it in `src/fixtures/index.ts`; new tests go in `tests/` and import `test` and `expect` from `@fixtures`.

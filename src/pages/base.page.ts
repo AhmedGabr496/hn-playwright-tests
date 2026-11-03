@@ -1,5 +1,4 @@
 import type { Locator, Page, Response } from '@playwright/test';
-import { env } from '@config/env';
 
 /** Common behaviour for every page object. */
 export abstract class BasePage {
@@ -10,11 +9,11 @@ export abstract class BasePage {
    * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
    * requests this quickly" page. We move between pages like a reader would (scroll down the page for a while,
    * then click the link), and if we are still throttled we wait and reload the page a few times.
-   * The timings come from the environment config (see `.env.example` for the settings and their defaults).
+   * The timings come from .env.example (or your own .env).
    */
-  protected readonly pauseBetweenPagesMs = env.pagePauseMs;
-  protected readonly rateLimitRetries = env.rateLimitRetries;
-  protected readonly rateLimitRetryDelayMs = env.rateLimitRetryDelayMs;
+  protected readonly pauseBetweenPagesMs = Number(process.env.PAGE_PAUSE_MS);
+  protected readonly rateLimitRetries = Number(process.env.RATE_LIMIT_RETRIES);
+  protected readonly rateLimitRetryDelayMs = Number(process.env.RATE_LIMIT_RETRY_DELAY_MS);
 
   private readonly rateLimitNotice: Locator;
 

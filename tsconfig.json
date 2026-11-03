@@ -15,7 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "paths": {
-      "@config/*": ["./src/config/*"],
       "@pages/*": ["./src/pages/*"],
       "@components/*": ["./src/components/*"],
       "@fixtures": ["./src/fixtures/index.ts"],

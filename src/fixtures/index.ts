@@ -1,5 +1,4 @@
 import { test as base } from '@playwright/test';
-import { env } from '@config/env';
 import { NewestPage } from '@pages/newest.page';
 import { type StaticAssetCache, serveStaticAssetsFromCache } from '@utils/static-assets.utils';
 
@@ -21,8 +20,9 @@ export const test = base.extend<PageFixtures, WorkerFixtures>({
     { scope: 'worker' },
   ],
 
-  page: async ({ page, staticAssetCache }, use) => {
-    await serveStaticAssetsFromCache(page, env.baseUrl, staticAssetCache);
+  page: async ({ page, baseURL, staticAssetCache }, use) => {
+    // baseURL comes from BASE_URL in .env.example (or your .env), which playwright.config.ts requires.
+    await serveStaticAssetsFromCache(page, baseURL!, staticAssetCache);
     await use(page);
   },
 
