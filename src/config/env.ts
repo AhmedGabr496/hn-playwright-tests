@@ -16,7 +16,23 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function optionalIntegerEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`Environment variable "${name}" must be a whole number of 0 or more, got "${raw}".`);
+  }
+  return value;
+}
+
 export const env = Object.freeze({
   baseUrl: requireEnv('BASE_URL'),
+  /** Time spent reading (scrolling down) each page before clicking through to the next one. */
+  pagePauseMs: optionalIntegerEnv('PAGE_PAUSE_MS', 10_000),
+  /** How many times a rate-limited page (HTTP 429/503) is reloaded before the test fails. */
+  rateLimitRetries: optionalIntegerEnv('RATE_LIMIT_RETRIES', 3),
+  /** Wait before each of those reloads. */
+  rateLimitRetryDelayMs: optionalIntegerEnv('RATE_LIMIT_RETRY_DELAY_MS', 10_000),
   isCI: Boolean(process.env.CI),
 });

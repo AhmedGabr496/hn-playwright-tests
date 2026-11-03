@@ -3,17 +3,20 @@ import { env } from './src/config/env';
 
 export default defineConfig({
   testDir: './tests',
-  // Leaves room for waiting out Hacker News rate limits (see BasePage.navigateTo).
+  // Leaves room for paced page loads and rate-limit retries (see BasePage).
   timeout: 180_000,
-  fullyParallel: true,
   forbidOnly: env.isCI,
   retries: env.isCI ? 1 : 0,
-  workers: env.isCI ? 1 : undefined,
+  // One worker: every test shares the same IP, and parallel page loads would trip Hacker News' rate limit.
+  workers: 1,
   reporter: env.isCI
     ? [['github'], ['list'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: env.baseUrl,
+    // Fail a stuck step within seconds, with a message saying what it waited for, instead of at the test timeout.
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
     trace: 'on-first-retry',
     // Attach a full-page screenshot and a video of every test to the HTML report, locally and on CI.
     screenshot: { mode: 'on', fullPage: true },

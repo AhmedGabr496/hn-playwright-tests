@@ -9,6 +9,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# The job only needs to read the code.
+permissions:
+  contents: read
+
 jobs:
   e2e:
     name: E2E tests
@@ -19,6 +23,10 @@ jobs:
     env:
       # Configure under: Settings → Secrets and variables → Actions → Variables
       BASE_URL: ${{ vars.BASE_URL }}
+      # Optional pacing overrides; when a variable isn't set, the defaults in src/config/env.ts apply.
+      PAGE_PAUSE_MS: ${{ vars.PAGE_PAUSE_MS }}
+      RATE_LIMIT_RETRIES: ${{ vars.RATE_LIMIT_RETRIES }}
+      RATE_LIMIT_RETRY_DELAY_MS: ${{ vars.RATE_LIMIT_RETRY_DELAY_MS }}
 
     steps:
       - name: Checkout

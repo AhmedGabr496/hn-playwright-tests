@@ -21,7 +21,8 @@ export class NewestPage extends BasePage {
 
   /**
    * Collects the first `count` articles, paging through "More" as needed.
-   * Articles are de-duplicated by id because new submissions shift the list between page loads.
+   * "More" continues from a specific article id, so new submissions don't shift later pages; articles are still
+   * de-duplicated by id as a cheap safety net.
    */
   async collectArticles(count: number, maxPages: number): Promise<Article[]> {
     const articles = new Map<string, Article>();

@@ -6,15 +6,19 @@ const { articleCount, maxPages } = newestPageData;
 
 test.describe('Hacker News - Newest', () => {
   test(`first ${articleCount} articles are sorted from newest to oldest`, async ({ newestPage }, testInfo) => {
-    await newestPage.open();
+    await test.step('Open Hacker News /newest', () => newestPage.open());
 
-    const articles = await newestPage.collectArticles(articleCount, maxPages);
+    const articles = await test.step(`Collect the first ${articleCount} articles`, () =>
+      newestPage.collectArticles(articleCount, maxPages),
+    );
     await testInfo.attach('articles.json', {
       body: JSON.stringify(articles, null, 2),
       contentType: 'application/json',
     });
 
-    expect(articles, `Expected exactly ${articleCount} articles`).toHaveLength(articleCount);
-    expect(findSortViolations(articles), 'Articles out of newest → oldest order').toEqual([]);
+    await test.step('Check they are sorted from newest to oldest', () => {
+      expect(articles, `Expected exactly ${articleCount} articles`).toHaveLength(articleCount);
+      expect(findSortViolations(articles), 'Articles out of newest → oldest order').toEqual([]);
+    });
   });
 });
