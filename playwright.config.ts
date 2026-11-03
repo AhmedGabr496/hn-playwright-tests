@@ -5,8 +5,14 @@ import { defineConfig, devices } from '@playwright/test';
 // Settings come from your own .env if it exists, otherwise from the committed .env.example (as on CI).
 // A real environment variable overrides both.
 dotenv.config({ path: [path.resolve(__dirname, '.env'), path.resolve(__dirname, '.env.example')], quiet: true });
-for (const name of ['BASE_URL', 'PAGE_PAUSE_MS', 'RATE_LIMIT_RETRIES', 'RATE_LIMIT_RETRY_DELAY_MS']) {
-  if (!process.env[name]) throw new Error(`Missing setting "${name}": add it to .env.example (or your .env)`);
+const NUMBER_SETTINGS = ['PAGE_PAUSE_MS', 'RATE_LIMIT_RETRIES', 'RATE_LIMIT_RETRY_DELAY_MS'];
+for (const name of ['BASE_URL', ...NUMBER_SETTINGS]) {
+  if (!process.env[name]?.trim()) throw new Error(`Missing setting "${name}": add it to .env.example (or your .env)`);
+}
+for (const name of NUMBER_SETTINGS) {
+  if (!/^\d+$/.test(process.env[name]!.trim())) {
+    throw new Error(`Setting "${name}" must be a whole number of 0 or more, got "${process.env[name]}"`);
+  }
 }
 const isCI = Boolean(process.env.CI);
 

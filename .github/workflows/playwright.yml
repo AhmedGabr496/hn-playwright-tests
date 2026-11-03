@@ -5,9 +5,10 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# One run at a time; a newer push waits instead of cancelling, so every commit gets a result.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 # The job only needs to read the code.
 permissions:

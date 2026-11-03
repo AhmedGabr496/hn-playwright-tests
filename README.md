@@ -36,7 +36,7 @@ It also fails with a clear message if a page can't be loaded, a timestamp can't 
 
 ### Hacker News' rate limit
 
-Hacker News answers too many requests from one IP address with **HTTP 429** or **503** ("Sorry, we're not able to serve your requests this quickly"). To stay polite, the test paces itself like a person, uses full Chromium so its requests look like a normal browser's, and downloads CSS, JavaScript and images only once. If a page is still throttled, it waits 10 seconds and reloads it, up to 3 times; any other error fails straight away.
+Hacker News answers too many requests from one IP address with **HTTP 429** or **503** ("Sorry, we're not able to serve your requests this quickly"). To stay polite, the test paces itself like a person, uses full Chromium so its requests look like a normal browser's, and downloads CSS, JavaScript and images only once. If a page is still throttled, it waits 10 seconds and reloads it, up to 3 times; any other error fails straight away. The pause and retry numbers can be changed ([Configuration](#configuration)).
 
 > **Note:** GitHub's shared CI runners use IP addresses that Hacker News often throttles, so a CI run can fail even when the test and the site are fine. **Re-run jobs** usually gets a different runner. Locally the test passes reliably.
 
@@ -86,7 +86,7 @@ All settings and their default values are in [`.env.example`](.env.example). The
 | `RATE_LIMIT_RETRIES` | `3` | Reloads of a throttled page before the test fails |
 | `RATE_LIMIT_RETRY_DELAY_MS` | `10000` | Milliseconds to wait before each reload |
 
-To change a value for one run, set it in your shell: `PAGE_PAUSE_MS=2000 npm test`. A missing setting stops the run straight away with a clear message.
+To change a value for one run, set it in your shell: `PAGE_PAUSE_MS=2000 npm test`. A missing or invalid setting stops the run straight away with a clear message.
 
 ## CI/CD
 
