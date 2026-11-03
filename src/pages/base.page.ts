@@ -7,8 +7,8 @@ export abstract class BasePage {
 
   /**
    * Hacker News throttles clients per IP, answering with HTTP 429 or with an HTTP 503 "not able to serve your
-   * requests this quickly" page. We move between pages like a reader would (pause 10s, then click the link), and
-   * if we are still throttled we wait 10s and reload the page, up to 3 times.
+   * requests this quickly" page. We move between pages like a reader would (spend ~10s scrolling down the page,
+   * then click the link), and if we are still throttled we wait 10s and reload the page, up to 3 times.
    */
   protected readonly pauseBetweenPagesMs = 10_000;
   protected readonly rateLimitRetries = 3;
@@ -29,9 +29,10 @@ export abstract class BasePage {
     await this.loadPage(() => this.page.goto(url));
   }
 
-  /** Moves to another page like a reader would: pauses on the current page, then clicks `link`. */
+  /** Moves to another page like a reader would: reads the current page, then clicks `link`. */
   protected async followLink(link: Locator): Promise<void> {
-    await this.page.waitForTimeout(this.pauseBetweenPagesMs);
+    await this.readPage();
+    await link.hover();
     await this.loadPage(async () => {
       const navigation = this.page.waitForResponse(
         (response) => response.request().isNavigationRequest() && response.frame() === this.page.mainFrame(),
@@ -42,6 +43,17 @@ export abstract class BasePage {
       await this.page.waitForURL((url) => url.href === response.url());
       return response;
     });
+  }
+
+  /** Scrolls down the current page in small steps over about `pauseBetweenPagesMs`, like a person reading it. */
+  private async readPage(): Promise<void> {
+    const steps = 10;
+    const scrollable = await this.page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    for (let step = 0; step < steps; step++) {
+      // People read at an uneven pace; the pauses vary but average out to pauseBetweenPagesMs in total.
+      await this.page.waitForTimeout((this.pauseBetweenPagesMs / steps) * (0.5 + Math.random()));
+      await this.page.mouse.wheel(0, Math.max(0, scrollable) / steps);
+    }
   }
 
   /** Runs `navigate` and checks the page it loads, waiting and reloading that page while rate limited. */

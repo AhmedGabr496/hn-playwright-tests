@@ -22,7 +22,9 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // Full Chromium in new headless mode: its requests carry the same headers as a person's browser, whereas
+      // the default headless shell announces itself as "HeadlessChrome" and sends no Accept-Language.
+      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
   ],
 });

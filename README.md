@@ -15,7 +15,7 @@ How the check works:
 - Each article's exact publish time is read from the `title` attribute of its age element (e.g. `2026-11-02T14:40:05`, UTC), not from the relative "5 minutes ago" text.
 - Articles are de-duplicated by id, because new submissions shift the list while the test pages through it.
 - Equal timestamps are allowed (Hacker News uses one-second resolution).
-- Hacker News rate-limits each IP. It returns HTTP 429, or HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. To stay under it, the test moves between pages like a reader: it pauses 10s on each page, then clicks **More** (rather than jumping straight to the link's URL). If a page is still throttled, the page objects wait 10s and reload it, up to 3 times.
+- Hacker News rate-limits each IP. It returns HTTP 429, or HTTP 503 with "Sorry, we're not able to serve your requests this quickly", and shared CI runner IPs hit this often. To stay under it, the test moves between pages like a reader: it spends about 10s scrolling down each page, then hovers over **More** and clicks it (rather than jumping straight to the link's URL). It runs full Chromium in new headless mode, so its requests carry the same headers as a person's browser (the default headless shell announces itself as `HeadlessChrome` and sends no `Accept-Language`). If a page is still throttled, the page objects wait 10s and reload it, up to 3 times.
 - To make fewer requests, each static file (CSS, JS, images) is downloaded once per worker and then served from memory. Hacker News sends no cache headers, so otherwise every page load would cost 6 requests instead of 1.
 - On failure, the report lists every out-of-order pair, and the collected articles are attached to the HTML report as `articles.json`.
 - Every run, local or CI, attaches a full-page screenshot and a video recording of each test to the HTML report (`npm run report`).
@@ -55,7 +55,7 @@ How the check works:
 ```bash
 npm ci                              # install dependencies
 cp .env.example .env                # create local environment config
-npx playwright install chromium     # install the browser
+npx playwright install --no-shell chromium   # install the browser (full Chromium)
 ```
 
 ## Running tests
