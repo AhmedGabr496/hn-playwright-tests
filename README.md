@@ -77,7 +77,7 @@ Every run, locally or on CI, produces a Playwright HTML report:
 
 ## Configuration
 
-Settings come from environment variables: locally from `.env` (git-ignored), on CI from the repository's **Variables** (*Settings → Secrets and variables → Actions → Variables*).
+Settings come from environment variables, set locally in `.env` (git-ignored). On CI, `BASE_URL` comes from the repository's **Variables** (*Settings → Secrets and variables → Actions → Variables*) and the optional settings use their defaults.
 
 | Variable | Required | Default | What it controls |
 | --- | --- | --- | --- |
