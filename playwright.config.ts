@@ -5,6 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
 // Settings come from your own .env if it exists, otherwise from the committed .env.example (as on CI).
 // A real environment variable overrides both.
 dotenv.config({ path: [path.resolve(__dirname, '.env'), path.resolve(__dirname, '.env.example')], quiet: true });
+
 const NUMBER_SETTINGS = ['PAGE_PAUSE_MS', 'RATE_LIMIT_RETRIES', 'RATE_LIMIT_RETRY_DELAY_MS'];
 for (const name of ['BASE_URL', ...NUMBER_SETTINGS]) {
   if (!process.env[name]?.trim()) throw new Error(`Missing setting "${name}": add it to .env.example (or your .env)`);

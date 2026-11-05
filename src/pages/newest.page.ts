@@ -38,6 +38,7 @@ export class NewestPage extends BasePage {
         if (!articles.has(article.id)) articles.set(article.id, article);
       }
     }
+    
 
     return [...articles.values()].slice(0, count);
   }
